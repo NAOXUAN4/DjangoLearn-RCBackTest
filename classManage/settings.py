@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'rest_framework',
+    'rest_framework.authtoken',  #基于令牌创建认证
     'corsheaders',
     'course',
     'CardDetails',

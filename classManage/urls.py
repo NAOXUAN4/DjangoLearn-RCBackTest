@@ -15,12 +15,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path,include
+from rest_framework.authtoken import views  #导入插件自带的视图
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api-auth/', include('rest_framework.urls')),
-
-    path('course/', include('course.urls')),
-
-    path('cardDetails/',include('CardDetails.urls'))
+    path('admin/', admin.site.urls),  #superuser 视图
+    path('api-auth/', include('rest_framework.urls')),  # rest_framework自带的登录视图
+    path('course/', include('course.urls')),  # 课程管理视图
+    path('cardDetails/',include('CardDetails.urls')),
+    path('api-token-auth/', views.obtain_auth_token),  # rest_framework自带的token获取视图
 ]

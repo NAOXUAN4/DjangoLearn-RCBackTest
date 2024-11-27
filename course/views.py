@@ -1,14 +1,28 @@
 from rest_framework.response import Response
 from .models import Course
-from .serializer import CourseSerializer
-from rest_framework import status, generics
-from rest_framework.decorators import api_view
-from rest_framework.views import APIView
-from rest_framework import viewsets
+from .serializer import CourseSerializer   # 序列化器
+from rest_framework import status, generics  # http状态，通用类视图
+
+from rest_framework.decorators import api_view,authentication_classes # api_view 函数式api装饰器, 认证装饰器
+from rest_framework.views import APIView  # 类视图
+from rest_framework import viewsets  # 视图集
+
+from django.db.models.signals import post_save   # django 信号机制：实例保存后触发的信号
+from django.contrib.auth.models import User  #引入django内置的User数据模型
+from rest_framework.authtoken.models import Token  #引入drf内置的的Token数据模型
+from django.dispatch import receiver  #注册为信号接收器装饰器
+
+from rest_framework.authentication import BaseAuthentication,SessionAuthentication,TokenAuthentication
+
+@receiver(post_save, sender=User)   #注册一个信号接收器，在User实例化时，自动触发该信号，并执行该函数
+def generate_token(sender, instance = None, created = False, **kwargs):
+    if created:
+        Token.objects.create(user=instance)
 
 
 # 函数视图 （Function Based View）-----------------------------------------------------------------------------------------
 @api_view(['GET','POST'])
+@authentication_classes([BaseAuthentication,TokenAuthentication])
 def course_list(request):
     if request.method == 'GET':
         # 对Course模型进行序列化,many=True表示序列化多个
@@ -25,6 +39,7 @@ def course_list(request):
         return Response(data=s.errors,status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET','PUT','DELETE'])
+@authentication_classes([BaseAuthentication,TokenAuthentication])
 def course_detail(request,pk):
     """
     指定id修改
@@ -53,7 +68,9 @@ def course_detail(request,pk):
 # 类视图（Class Based View） ---------------------------------------------------------------------------------------------
 
 #getList类
+
 class CourseList(APIView):
+    authentication_classes = [BaseAuthentication,TokenAuthentication]
     def get(self, request):
         querySet = Course.objects.all()
         s = CourseSerializer(instance=querySet,many=True)
@@ -68,6 +85,7 @@ class CourseList(APIView):
 
 #Detail类
 class CourseDetail(APIView):
+    authentication_classes = [BaseAuthentication,TokenAuthentication]
     def get_object(self,pk):   # 统一获取对象
         try:
             return Course.objects.get(pk=pk)
@@ -90,6 +108,9 @@ class CourseDetail(APIView):
 
 # 通用类视图（Generic Classed Based View） --------------------------------------------------------------------------------
 class CourseListGeneric(generics.ListCreateAPIView): #继承自APIVIEW List方法
+
+    authentication_classes = [BaseAuthentication,TokenAuthentication]
+
     queryset = Course.objects.all()    # 获取数据
     serializer_class = CourseSerializer  # 序列化器
 
@@ -103,6 +124,7 @@ class CourseDetailGeneric(generics.RetrieveUpdateDestroyAPIView): #继承自Retr
 
 #视图集（ViewSets） ------------------------------------------------------------------------------------------------------
 class CourseViewSet(viewsets.ModelViewSet):  #混合了通用类视图等方法
+    authentication_classes([BaseAuthentication,TokenAuthentication])
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
 

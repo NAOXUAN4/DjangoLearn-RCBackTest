@@ -1,5 +1,8 @@
 from django.urls import path,include
 from course import views
+from rest_framework.routers import DefaultRouter
+router = DefaultRouter()  #实例化视图集类
+router.register('viewsets',views.CourseViewSet)
 
 urlpatterns = [
     # function based view---------------------------------
@@ -15,6 +18,7 @@ urlpatterns = [
     path('gcbv/detail/<int:pk>/',views.CourseDetailGeneric.as_view(), name = 'gcbv-detail'),
 
     # viewsets --------------------------------------------
+    # 1. as_view()
     path('vs/',views.CourseViewSet.as_view(
         {'get':'list',
          "post":"create"})),  #GET请求 使用list方法
@@ -23,4 +27,7 @@ urlpatterns = [
          'put':'update', #PUT请求使用update方法
          'patch':'partial_update',  #PATCH请求使用partial_update方法
          'delete':'destroy'})),  #DELETE请求使用destroy方法
+
+    # 2. routers.DefaultRouter
+    path('',include(router.urls))  #/course/viewsets/
 ]
